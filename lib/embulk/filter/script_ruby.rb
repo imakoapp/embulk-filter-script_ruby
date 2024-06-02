@@ -43,9 +43,13 @@ module Embulk
           begin
             h = Hash[in_schema.names.zip(record)]
             result = @filter_class.filter(h)
+            results = result.is_a? Hash ? [result] : result
             out_record = []
             out_schema.sort_by { |e| e['index'] }.each do |e|
-              out_record << (result.key?(e['name']) ? result[e['name']] : nil)
+              results.each do |result|
+                next if result.empty?
+                out_record << (result.key?(e['name']) ? result[e['name']] : nil)
+              end
             end
             page_builder.add(out_record) unless out_record.empty?
           rescue => e
